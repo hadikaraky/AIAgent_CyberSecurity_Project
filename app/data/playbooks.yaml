@@ -1,0 +1,41 @@
+playbooks:
+  sqli:
+    name: SQL Injection Response
+    steps:
+      - Block attacking IP at firewall/WAF immediately
+      - Preserve logs before any cleanup
+      - Review all DB queries for unsanitized inputs
+      - Check for data exfiltration in DB audit logs
+      - Patch with parameterized queries
+      - Notify DPO if PII may be affected
+  brute_force:
+    name: Brute Force Response
+    steps:
+      - Block source IP range
+      - Enable account lockout policy
+      - Force password reset for targeted accounts
+      - Enable MFA immediately
+      - Review successful logins in the attack window
+  xss:
+    name: XSS Response
+    steps:
+      - Identify and sanitize vulnerable input fields
+      - Invalidate all active sessions
+      - Review for stored XSS payloads in DB
+      - Enable Content Security Policy headers
+  phishing:
+    name: Phishing Response
+    steps:
+      - Block sender domain at email gateway
+      - Identify all recipients of the phishing email
+      - Check for credential compromise
+      - Reset credentials for affected users
+      - Report to anti-phishing authorities
+  default:
+    name: General Incident Response
+    steps:
+      - Isolate affected system if possible
+      - Preserve all logs and evidence
+      - Identify scope of impact
+      - Escalate to lead security engineer
+      - Document all actions taken

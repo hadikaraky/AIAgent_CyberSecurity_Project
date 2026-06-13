@@ -1,0 +1,112 @@
+[
+  {
+    "cve_id": "CVE-2021-44228",
+    "name": "Log4Shell",
+    "cvss": 10.0,
+    "affected": "Apache Log4j 2.x",
+    "description": "Remote code execution via JNDI injection in log messages.",
+    "patch": "Upgrade to Log4j 2.17.1+",
+    "mitre_ref": "T1190",
+    "severity": "Critical",
+    "keywords": ["log4shell", "log4j", "jndi", "cve-2021-44228"]
+  },
+  {
+    "cve_id": "CVE-2017-0144",
+    "name": "EternalBlue",
+    "cvss": 8.1,
+    "affected": "Microsoft Windows SMB (MS17-010)",
+    "description": "Remote code execution via SMBv1 buffer overflow used by WannaCry and similar malware.",
+    "patch": "Apply Microsoft MS17-010 security bulletin",
+    "mitre_ref": "T1210",
+    "severity": "Critical",
+    "keywords": ["eternalblue", "ms17-010", "smb", "wannacry", "cve-2017-0144"]
+  },
+  {
+    "cve_id": "CVE-2014-0160",
+    "name": "Heartbleed",
+    "cvss": 7.5,
+    "affected": "OpenSSL 1.0.1 through 1.0.1f",
+    "description": "TLS heartbeat extension allows reading sensitive memory including private keys.",
+    "patch": "Upgrade OpenSSL to 1.0.1g or later",
+    "mitre_ref": "T1005",
+    "severity": "High",
+    "keywords": ["heartbleed", "openssl", "tls", "cve-2014-0160"]
+  },
+  {
+    "cve_id": "CVE-2014-6271",
+    "name": "ShellShock",
+    "cvss": 9.8,
+    "affected": "GNU Bash through 4.3",
+    "description": "Bash environment variable processing allows arbitrary command execution.",
+    "patch": "Upgrade Bash to patched version",
+    "mitre_ref": "T1190",
+    "severity": "Critical",
+    "keywords": ["shellshock", "bash", "cve-2014-6271"]
+  },
+  {
+    "cve_id": "CVE-2021-34527",
+    "name": "PrintNightmare",
+    "cvss": 8.8,
+    "affected": "Windows Print Spooler Service",
+    "description": "Remote code execution via Windows Print Spooler service privilege escalation.",
+    "patch": "Apply Microsoft security updates for Print Spooler",
+    "mitre_ref": "T1068",
+    "severity": "Critical",
+    "keywords": ["printnightmare", "print spooler", "cve-2021-34527"]
+  },
+  {
+    "cve_id": "CVE-2021-26855",
+    "name": "ProxyLogon",
+    "cvss": 9.8,
+    "affected": "Microsoft Exchange Server",
+    "description": "Server-side request forgery leading to remote code execution on Exchange servers.",
+    "patch": "Apply Microsoft Exchange cumulative updates",
+    "mitre_ref": "T1190",
+    "severity": "Critical",
+    "keywords": ["proxylogon", "exchange", "ssrf", "cve-2021-26855"]
+  },
+  {
+    "cve_id": "CVE-2016-5195",
+    "name": "Dirty COW",
+    "cvss": 7.8,
+    "affected": "Linux kernel before 4.8.3",
+    "description": "Race condition in copy-on-write memory management allows local privilege escalation.",
+    "patch": "Upgrade Linux kernel to 4.8.3 or later",
+    "mitre_ref": "T1068",
+    "severity": "High",
+    "keywords": ["dirty cow", "dirtycow", "kernel", "cve-2016-5195"]
+  },
+  {
+    "cve_id": "CVE-2022-22965",
+    "name": "Spring4Shell",
+    "cvss": 9.8,
+    "affected": "Spring Framework on JDK 9+",
+    "description": "Remote code execution via data binding on Spring MVC applications.",
+    "patch": "Upgrade Spring Framework to 5.3.18+ or 5.2.20+",
+    "mitre_ref": "T1190",
+    "severity": "Critical",
+    "keywords": ["spring4shell", "spring framework", "cve-2022-22965"]
+  },
+  {
+    "cve_id": "CVE-2023-34362",
+    "name": "MOVEit Transfer",
+    "cvss": 9.8,
+    "affected": "Progress MOVEit Transfer",
+    "description": "SQL injection vulnerability in MOVEit Transfer web application leading to data theft.",
+    "patch": "Apply Progress MOVEit security patches",
+    "mitre_ref": "T1190",
+    "severity": "Critical",
+    "keywords": ["moveit", "progress moveit", "cve-2023-34362"]
+  },
+  {
+    "cve_id": "CVE-2023-4966",
+    "name": "Citrix Bleed",
+    "cvss": 9.4,
+    "affected": "Citrix NetScaler ADC and Gateway",
+    "description": "Buffer overflow allows leaking session tokens and bypassing authentication.",
+    "patch": "Apply Citrix NetScaler security updates",
+    "mitre_ref": "T1190",
+    "severity": "Critical",
+    "keywords": ["citrix bleed", "netscaler", "citrix", "cve-2023-4966"]
+  }
+]

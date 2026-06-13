@@ -1,0 +1,20 @@
+version: "3.9"
+services:
+  cybertriage:
+    build: .
+    ports:
+      - "7860:7860"
+    env_file:
+      - .env
+    volumes:
+      - incident_data:/app/app/data
+      - logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  incident_data:
+  logs:

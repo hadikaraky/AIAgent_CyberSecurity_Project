@@ -1,0 +1,8 @@
+langchain-google-genai
+google-generativeai
+langgraph
+langchain-core
+gradio
+pyyaml
+python-dotenv
+reportlab
