@@ -413,15 +413,14 @@ def _normalize_history(history: list | None) -> list:
     return normalized
 
 
-def _stream_text(text: str, chunk_size: int = 3, delay: float = 0.045):
-    """Yield progressively longer slices of text for typing animation."""
+def _stream_chunks(text: str, chunk_size: int):
+    """Yield progressively longer slices for a typing effect."""
     if not text:
         yield ""
         return
     step = max(1, chunk_size)
-    for i in range(step, len(text) + step, step):
-        yield text[:i]
-    yield text
+    for end in range(step, len(text) + step, step):
+        yield text[: min(end, len(text))]
 
 
 def _thinking_message(frame: int = 0) -> str:
@@ -437,6 +436,17 @@ def _yield_state(history, user_input=""):
         _format_incidents_html(),
         _format_workflow_bar_html(),
         _format_top_bar_html(),
+    )
+
+
+def _yield_stream(history):
+    """Update only the chatbot during typing animation — avoids UI flicker."""
+    return (
+        history,
+        gr.skip(),
+        gr.skip(),
+        gr.skip(),
+        gr.skip(),
     )
 
 
@@ -473,12 +483,27 @@ def chat_fn(message: str, history: list):
 
     while agent_thread.is_alive() or (time.time() - thinking_start) < min_thinking_secs:
         history[-1] = {"role": "assistant", "content": _thinking_message(frame)}
-        yield _yield_state(history, "")
+        yield _yield_stream(history)
         frame += 1
         time.sleep(0.45)
 
     agent_thread.join()
     response = response_box[0] or error_box[0] or "I was unable to process your request."
+
+    if len(response) <= 200:
+        chunk_size, delay = 2, 0.06
+    elif len(response) <= 600:
+        chunk_size, delay = 5, 0.05
+    else:
+        chunk_size, delay = 10, 0.04
+
+    for partial in _stream_chunks(response, chunk_size):
+        is_done = partial == response
+        display = partial if is_done else partial + " ▌"
+        history[-1] = {"role": "assistant", "content": display}
+        yield _yield_stream(history)
+        if not is_done:
+            time.sleep(delay)
 
     history[-1] = {"role": "assistant", "content": response}
     yield _yield_state(history, "")
