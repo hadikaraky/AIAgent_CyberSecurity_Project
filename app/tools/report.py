@@ -246,51 +246,6 @@ def _draw_cover_page(canv: canvas.Canvas, doc, meta: dict):
     canv.restoreState()
 
 
-def _draw_toc_page(canv: canvas.Canvas, doc, meta: dict):
-    """Navy background TOC page with HTB branding."""
-    width, height = A4
-    canv.saveState()
-
-    canv.setFillColor(HTB_NAVY)
-    canv.rect(0, 0, width, height, fill=1, stroke=0)
-
-    # Top accent line
-    canv.setStrokeColor(HTB_GREEN)
-    canv.setLineWidth(2)
-    canv.line(0, height - 0.25 * cm, width, height - 0.25 * cm)
-
-    # Header row: HTB logo (left) + title (right of logo)
-    logo_bottom = height - 3.0 * cm
-    logo_w, logo_h = 2.5 * cm, 1.2 * cm
-    logo_x = 2 * cm
-
-    canv.setFillColor(HTB_GREEN)
-    canv.rect(logo_x, logo_bottom, logo_w, logo_h, fill=1, stroke=0)
-    canv.setFillColor(WHITE)
-    canv.setFont("Helvetica-Bold", 16)
-    canv.drawCentredString(logo_x + logo_w / 2, logo_bottom + 0.38 * cm, "HTB")
-
-    canv.setFont("Helvetica-Bold", 18)
-    canv.drawString(logo_x + logo_w + 0.8 * cm, logo_bottom + 0.35 * cm, "Table of Contents")
-
-    # Divider under header
-    rule_y = logo_bottom - 0.45 * cm
-    canv.setStrokeColor(HTB_GREEN)
-    canv.setLineWidth(2)
-    canv.line(2 * cm, rule_y, width - 2 * cm, rule_y)
-
-    canv.setFillColor(colors.HexColor("#AAAAAA"))
-    canv.setFont("Helvetica", 8)
-    canv.drawCentredString(width / 2, 1 * cm, f"Page {canv.getPageNumber()}")
-    canv.drawCentredString(
-        width / 2,
-        0.55 * cm,
-        "AI Decision Support Only — Not Authoritative",
-    )
-
-    canv.restoreState()
-
-
 def _draw_content_page(canv: canvas.Canvas, doc, meta: dict):
     width, height = A4
     canv.saveState()
@@ -356,12 +311,30 @@ def _toc_table(section_pages: dict, styles: dict) -> Table:
     return table
 
 
-def _build_toc_story(page_tracker: dict, styles: dict) -> list:
-    """TOC entries only — title and header are drawn on the page canvas."""
-    return [
-        Spacer(1, 4),
-        _toc_table(page_tracker, styles),
-    ]
+def _toc_section(page_tracker: dict, styles: dict) -> Table:
+    """Navy Table of Contents panel with white text — does not affect content pages."""
+    panel = Table(
+        [
+            [Paragraph("Table of Contents", styles["toc_title"])],
+            [GreenRule()],
+            [Spacer(1, 12)],
+            [_toc_table(page_tracker, styles)],
+        ],
+        colWidths=[16 * cm],
+    )
+    panel.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), HTB_NAVY),
+                ("TOPPADDING", (0, 0), (-1, -1), 22),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 22),
+                ("LEFTPADDING", (0, 0), (-1, -1), 18),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 18),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ]
+        )
+    )
+    return panel
 
 
 def _build_story(
@@ -373,7 +346,8 @@ def _build_story(
     story = []
 
     if include_toc and page_tracker:
-        story.extend(_build_toc_story(page_tracker, styles))
+        story.append(_toc_section(page_tracker, styles))
+        story.append(Spacer(1, 14))
         story.append(PageBreak())
 
     exec_summary = (
@@ -512,23 +486,14 @@ def _make_doc(output_path: str) -> BaseDocTemplate:
         id="content",
         topPadding=1.4 * cm,
     )
-    toc_frame = Frame(
-        doc.leftMargin,
-        doc.bottomMargin + 1.2 * cm,
-        doc.width,
-        doc.height - 4.8 * cm,
-        id="toc",
-        topPadding=0,
-        bottomPadding=0,
-    )
-    return doc, cover_frame, content_frame, toc_frame
+    return doc, cover_frame, content_frame
 
 
 def _render_pdf(meta: dict, output_path: str) -> None:
     page_tracker: dict = {}
     styles = _make_styles()
 
-    doc, cover_frame, content_frame, _toc_frame = _make_doc(output_path)
+    doc, cover_frame, content_frame = _make_doc(output_path)
     doc.addPageTemplates(
         [
             PageTemplate(
@@ -558,18 +523,13 @@ def _render_pdf(meta: dict, output_path: str) -> None:
         if name in page_tracker
     }
 
-    doc2, cover_frame2, content_frame2, toc_frame2 = _make_doc(output_path)
+    doc2, cover_frame2, content_frame2 = _make_doc(output_path)
     doc2.addPageTemplates(
         [
             PageTemplate(
                 id="Cover",
                 frames=[cover_frame2],
                 onPage=lambda c, d: _draw_cover_page(c, d, meta),
-            ),
-            PageTemplate(
-                id="TOC",
-                frames=[toc_frame2],
-                onPage=lambda c, d: _draw_toc_page(c, d, meta),
             ),
             PageTemplate(
                 id="Content",
@@ -582,11 +542,8 @@ def _render_pdf(meta: dict, output_path: str) -> None:
     pass2_story = [
         Spacer(1, 1),
         PageBreak(),
-        NextPageTemplate("TOC"),
-        *_build_toc_story(adjusted_tracker, styles),
-        PageBreak(),
         NextPageTemplate("Content"),
-        *_build_story(meta, styles, adjusted_tracker, include_toc=False),
+        *_build_story(meta, styles, adjusted_tracker, include_toc=True),
     ]
     doc2.build(pass2_story, canvasmaker=canvas.Canvas)
 

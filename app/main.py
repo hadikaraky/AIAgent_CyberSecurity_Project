@@ -388,8 +388,35 @@ def _format_top_bar_html() -> str:
     )
 
 
+def _extract_content(content) -> str:
+    """Convert Gradio 6 multimodal content blocks back to plain text."""
+    if content is None:
+        return ""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts = []
+        for block in content:
+            if isinstance(block, dict):
+                if block.get("type") == "text" and block.get("text") is not None:
+                    parts.append(str(block["text"]))
+                elif block.get("text") is not None:
+                    parts.append(str(block["text"]))
+                elif block.get("content") is not None:
+                    parts.append(_extract_content(block["content"]))
+            elif isinstance(block, str):
+                parts.append(block)
+        return "\n".join(parts) if parts else ""
+    if isinstance(content, dict):
+        if content.get("text") is not None:
+            return str(content["text"])
+        if content.get("content") is not None:
+            return _extract_content(content["content"])
+    return str(content)
+
+
 def _normalize_history(history: list | None) -> list:
-    """Ensure chat history is always Gradio 6 messages format."""
+    """Ensure chat history is always Gradio 6 messages format with plain-text content."""
     normalized: list = []
     for item in history or []:
         if isinstance(item, dict):
@@ -401,15 +428,19 @@ def _normalize_history(history: list | None) -> list:
         elif isinstance(item, (list, tuple)) and len(item) == 2:
             user_msg, bot_msg = item
             if user_msg:
-                normalized.append({"role": "user", "content": str(user_msg)})
+                normalized.append(
+                    {"role": "user", "content": _extract_content(user_msg)}
+                )
             if bot_msg:
-                normalized.append({"role": "assistant", "content": str(bot_msg)})
+                normalized.append(
+                    {"role": "assistant", "content": _extract_content(bot_msg)}
+                )
             continue
         else:
             continue
 
-        if role in ("user", "assistant") and content is not None:
-            normalized.append({"role": role, "content": str(content)})
+        if role in ("user", "assistant"):
+            normalized.append({"role": role, "content": _extract_content(content)})
     return normalized
 
 
