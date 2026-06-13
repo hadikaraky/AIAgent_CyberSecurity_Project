@@ -1,57 +1,68 @@
+Hadi KARAKI : 6679
+Ali Akar : 6575
 # CyberTriage Agent
 
-A Dockerized AI-powered Cybersecurity Triage Agent that helps security analysts classify, document, and respond to security incidents using MITRE ATT&CK, CVE knowledge bases, and structured incident reporting.
+An AI-powered cybersecurity triage agent that runs in Docker. You describe a security
+incident, it classifies the threat using MITRE ATT&CK and known CVEs, scores the
+severity, creates an incident record, and generates a HackTheBox-style PDF report.
+Built for a university course project at Lebanese University, Faculty of Engineering.
 
-## Quick Start
+## Running it
 
 ```bash
 cp .env.example .env
-# Edit .env and add your ANTHROPIC_API_KEY
+# add your Google Gemini API key to .env
 
 docker compose up --build
 ```
 
-Open **http://localhost:7860** in your browser.
+Then open http://localhost:7860.
 
-## Architecture Overview
+## How it works
 
-The system is organized into 7 layers:
+The agent follows a fixed pipeline: it figures out what you want, collects the
+incident details, looks up the threat in the local knowledge base, scores the
+severity, asks for your confirmation, writes the incident to the database, and
+generates the report. It won't do anything to the database without you confirming
+first.
 
-1. **Presentation Layer** — Gradio web UI (`app/main.py`) with chat interface, incident list, and workflow state indicator
-2. **Agent Layer** — LangGraph workflow (`app/agent.py`) with intent routing and multi-step triage pipeline
-3. **Memory Layer** — Short-term conversation history and working memory state (`app/memory.py`)
-4. **Tools Layer** — Four typed tools: lookup, analyze, create incident, generate report (`app/tools/`)
-5. **Knowledge Layer** — MITRE ATT&CK tactics, CVE database, and response playbooks (`app/data/`)
-6. **Persistence Layer** — SQLite incidents database with Docker volume persistence (`app/data/incidents.db`)
-7. **Infrastructure Layer** — Docker containerization with health checks and logging (`Dockerfile`, `docker-compose.yml`)
+The workflow looks like this:
+router → intake → analyze → confirm → action → report
 
-## Workflow
+If you ask it something outside its scope it tells you that directly instead of
+making something up.
 
-```
-router → [intake | unsupported]
-intake → analyze → confirm → action → report → done
-```
+## The four tools
 
-The agent collects incident details, looks up threat intelligence, scores severity deterministically, requires explicit user confirmation before database writes, and generates Bruno Nakamura-style incident reports.
+**lookup_threat** — searches the local MITRE ATT&CK tactics and CVE knowledge base
+for anything matching the incident description. Returns the technique, tactic,
+indicators, and containment steps.
 
-## Tools
+**analyze_severity** — deterministic scoring from 0 to 100 based on the lookup
+result, the affected asset, and the source IP. No LLM involved here, just rules.
 
-| Tool | Purpose | Data Source |
-|------|---------|-------------|
-| `lookup_threat` | Match incidents to MITRE techniques and CVEs | `mitre_tactics.json`, `cve_knowledge.json` |
-| `analyze_severity` | Deterministic risk scoring (0–100) | Lookup result + asset/IP context |
-| `create_incident` | Write confirmed incidents to SQLite | `incidents.db` |
-| `generate_report` | Bruno-style structured incident report | All collected incident data |
+**create_incident** — writes the confirmed incident to SQLite. Requires explicit
+confirmation before it does anything. Logs every call to logs/actions.log.
 
-## Environment Variables
+**generate_report** — produces a HackTheBox-style PDF with cover page, threat
+intel table, containment checklist, and disclaimer. Saved to logs/reports/.
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `ANTHROPIC_API_KEY` | Claude API key for LLM reasoning | *(required)* |
-| `GRADIO_SERVER_NAME` | Gradio bind address | `0.0.0.0` |
-| `GRADIO_SERVER_PORT` | Gradio port | `7860` |
+## Stack
 
-## Local Development
+Python, Gradio, LangGraph, SQLite, ReportLab, Google Gemini (free tier),
+Docker. Domain knowledge is stored in JSON and YAML — no vector database,
+no embeddings, no RAG pipeline.
+
+## Environment variables 
+GOOGLE_API_KEY=your_key_here
+
+GRADIO_SERVER_NAME=0.0.0.0
+
+GRADIO_SERVER_PORT=7860 
+
+Get a free Gemini API key at aistudio.google.com.
+
+## Running without Docker
 
 ```bash
 pip install -r requirements.txt
@@ -60,25 +71,14 @@ python app/data/db_init.py
 python app/main.py
 ```
 
-Run tests:
+Tests:
 
 ```bash
-pip install pytest
 pytest tests/ -v
 ```
 
-## Team Contributions
+## AI tools used
 
-| Student | Area | Responsibilities |
-|---------|------|------------------|
-| Student 1 | Tools | `lookup.py`, `analyze.py`, `action.py`, `report.py`, data files |
-| Student 2 | Agent | `agent.py`, `memory.py`, LangGraph workflow, routing logic |
-| Student 3 | Platform | `main.py`, Docker setup, `docker-compose.yml`, tests, README |
+Google Gemini is the LLM reasoning core. Cursor was used for code generation
+during development.
 
-## AI Tool Declaration
-
-Claude API is used as the LLM reasoning core. Cursor was used for code generation assistance during development.
-
-## Disclaimer
-
-This agent is a **decision-support tool only**. All threat assessments, severity classifications, and containment recommendations must be verified by a qualified security engineer before execution.
